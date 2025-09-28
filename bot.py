@@ -1,7 +1,7 @@
 import os
 import asyncio
 import json
-import aioredis
+import redis.asyncio as redis
 from dotenv import load_dotenv
 
 from db import init_db_pool, log_species_event
@@ -14,8 +14,8 @@ REDIS_URL = os.environ["REDIS_URL"]
 async def handle_respawn_events():
     """Subscribe to Redis channel and log species events into Supabase."""
     print(f"[REDIS] Connecting to {REDIS_URL}")
-    redis = aioredis.from_url(REDIS_URL, decode_responses=True)
-    pubsub = redis.pubsub()
+    client = redis.from_url(REDIS_URL, decode_responses=True)
+    pubsub = client.pubsub()
     await pubsub.subscribe("pot_events")
     print("[REDIS] Subscribed to pot_events channel")
 
