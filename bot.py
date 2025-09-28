@@ -13,22 +13,18 @@ REDIS_URL = os.environ["REDIS_URL"]
 
 async def handle_respawn_events():
     """Subscribe to Redis channel and log species events into Supabase."""
-    print(f"[REDIS] Connecting to {REDIS_URL}")
     client = redis.from_url(REDIS_URL, decode_responses=True)
     pubsub = client.pubsub()
     await pubsub.subscribe("pot_events")
-    print("[REDIS] Subscribed to pot_events channel")
+    print("[READY] Listening for PlayerRespawn events...")
 
     async for msg in pubsub.listen():
         if msg.get("type") != "message":
             continue
 
-        # Parse JSON payload
         try:
             payload = json.loads(msg["data"])
-            print(f"[PARSE] JSON payload: {payload}")
-        except Exception as e:
-            print(f"[ERROR] JSON parse failed: {e}")
+        except Exception:
             continue
 
         # Only handle PlayerRespawn events
@@ -46,11 +42,10 @@ async def handle_respawn_events():
 
         dino = details.get("DinosaurType")
         aid = details.get("PlayerAlderonId")
-        print(f"[CHECK] DinoType={dino}, AlderonId={aid}")
 
-        # Log to SQL
         if dino and aid:
             await log_species_event(aid, dino)
+            print(f"[LOGGED] {aid} spawned as {dino}")
 
 async def main():
     await init_db_pool()
